@@ -1,12 +1,13 @@
-# DK Catering - Platform Pemesanan Catering Harian
+# DK Catering - Platform Pemesanan Catering Harian & Dashboard Admin
 
-Website pemesanan masakan harian DK Catering berbasis Next.js App Router, TypeScript (Strict), Tailwind CSS, dan Supabase. Dirancang khusus dengan estetika iOS modern dan sangat ramah untuk orang tua (*senior-friendly*).
+Website pemesanan masakan harian DK Catering berbasis Next.js App Router, TypeScript (Strict), Tailwind CSS, dan Supabase. Dirancang khusus dengan estetika iOS modern, ramah orang tua, dashboard admin responsif, serta pencetakan struk thermal ESC/POS 58mm untuk Android (RawBT).
 
 ---
 
 ## 🚀 Persyaratan Sistem
 - Node.js versi 18+ (Rekomendasi v20+)
-- Akun Supabase (PostgreSQL & Storage)
+- Akun Supabase (PostgreSQL, Storage, & Authentication)
+- HP Android + Printer Bluetooth Thermal 58mm (Algoo / POS-58) + Aplikasi **RawBT**
 
 ---
 
@@ -22,78 +23,85 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 NEXT_PUBLIC_WA_NUMBER=6281234567890
 NEXT_PUBLIC_STORE_NAME="DK Catering"
+
+# Flag Simulasi Pengujian (Optional, default false)
+NEXT_PUBLIC_USE_MOCK_DATA=false
 ```
-> **Catatan Keamanan (PENTING):** `SUPABASE_SERVICE_ROLE_KEY` hanya berjalan di lingkungan server (*Server Actions*). Kunci ini **tidak pernah terekspos** ke browser pelanggan.
 
 ---
 
 ## 🗄️ Urutan Migrasi Database ke Supabase
 
-Jalankan script SQL berikut secara berurutan di menu **SQL Editor** Supabase Dashboard Anda:
+Jalankan script SQL berikut secara berurutan di menu **SQL Editor** Supabase Dashboard:
 
-1. **Migrasi Tahap 1:** `supabase/migrations/001_initial_schema.sql`  
-   - Membuat tabel master `menus`, `daily_menus`, `customers`, `addresses`, `orders`, `order_items`, `payments`, `settings`, `admins`.
-   - Membuat sequence dan trigger format kode pelanggan (`DK-0001`) dan nomor pesanan (`DK-YYMMDD-001`).
-
-2. **Migrasi Tahap 2:** `supabase/migrations/002_customer_auth_orders.sql`  
-   - Menambahkan tabel `sessions` (token hash SHA-256 untuk cookie 1 tahun).
-   - Menambahkan kolom rincian `addresses` (`street`, `house_number`, `rt_rw`, `kelurahan`, `kecamatan`, `city`, `detail_note`) serta partial unique index agar hanya 1 alamat yang menjadi default (`is_default = true`).
-   - Memperketat Row Level Security (RLS) sehingga tabel data customer **sama sekali tidak bisa dibaca/ditulis oleh role `anon`**.
-   - Menambahkan fungsi transaksi atomik `create_order` yang mengunci baris `daily_menus` (`SELECT ... FOR UPDATE`) untuk mencegah *race-condition* saat kuota diperebutkan secara bersamaan.
-
-3. **Data Awal (Seed):** `supabase/seed.sql`  
-   - Memasukkan master 15 masakan rumahan Indonesia, jadwal porsi menu hari ini, dan data dummy awal.
+1. **Migrasi 001:** `supabase/migrations/001_initial_schema.sql` (Tabel dasar, sequence `DK-0001` & `DK-YYMMDD-001`, RLS publik).
+2. **Migrasi 002:** `supabase/migrations/002_customer_auth_orders.sql` (Tabel sessions cookie 1 tahun, alamat detail, isolasi RLS pelanggan, transaksi atomik `create_order`).
+3. **Migrasi 003:** `supabase/migrations/003_admin.sql` (Bucket storage `menu-photos`, fungsi atomik `cancel_order`, fungsi `get_cooking_recap`, kolom `print_count` dan `last_printed_at`).
+4. **Data Awal (Seed):** `supabase/seed.sql` (15 master resep, jadwal hari ini, 3 pelanggan dummy).
 
 ---
 
-## 🔒 Uji Keamanan RLS (Memastikan Anon Key Ditolak)
-Anda dapat memverifikasi bahwa tabel pelanggan terlindungi dari akses anonim dengan menjalankan cURL berikut:
-```bash
-curl -X GET "https://<PROJECT-ID>.supabase.co/rest/v1/customers?select=*" \
-  -H "apikey: <ANON_KEY>" \
-  -H "Authorization: Bearer <ANON_KEY>"
-```
-**Hasil yang diharapkan:** Mengembalikan array kosong `[]` atau kode error `401/403 Permission Denied`. Ini membuktikan bahwa pelanggan tidak bisa mencuri data pelanggan lain lewat REST API publik Supabase.
-
----
-
-## 🧪 Cara Menguji Fitur Tahap 2
-
-### 1. Menjalankan Aplikasi
-```bash
-npm run dev
-```
-Buka browser di `http://localhost:3000` (mode tampilan mobile 375px - 430px).
-
-### 2. Skenario Uji Pelanggan Baru:
-1. Di beranda, pilih salah satu menu lalu tekan tombol **+ Tambah**.
-2. Klik tombol hitam **"Pesan Sekarang"** di floating cart bagian bawah.
-3. Anda akan otomatis dialihkan ke `/masuk?next=/pesan`.
-4. Masukkan nomor WhatsApp baru (misal: `0857 1234 5678`). Tekan **Lanjut**.
-5. Sistem mendeteksi nomor belum terdaftar dan menampilkan form pendaftaran. Masukkan Nama Lengkap dan rincian Alamat (Jalan, No Rumah, Kecamatan, Kota). Tekan **Daftar & Lanjut**.
-6. Anda langsung dialihkan ke `/pesan`. Alamat tampil **disamarkan** (contoh: *Jl. Melati No. ••, Lowokwaru*).
-7. Pilih metode **Tunai ke Kurir**, lalu tekan **Lanjut Pesan Sekarang**.
-8. Anda akan tiba di halaman `/pesanan/DK-YYMMDD-xxx` ("Pesanan Sedang Diproses") dengan ID Pelanggan unik Anda (`DK-xxxx`).
-
-### 3. Skenario Uji Pelanggan Lama (Auto-Login & Cookie Sesi):
-1. Buka tab incognito atau browser baru, buka `/masuk`.
-2. Masukkan nomor WhatsApp yang sudah pernah terdaftar di atas.
-3. Tekan **Lanjut**. Sistem langsung mengenali Anda, menampilkan pesan sapaan *"Selamat datang kembali, [Nama]"*, dan otomatis login tanpa perlu OTP.
-4. Refresh atau tutup dan buka kembali browser; sesi tetap aktif selama 1 tahun melalui cookie `dk_session`.
-
-### 4. Skenario Uji Transaksi Atomik (2 Pesanan Bersamaan untuk Kuota Terakhir):
-Fungsi `create_order` pada migrasi `002_customer_auth_orders.sql` menggunakan klausa PostgreSQL `FOR UPDATE`:
+## 👤 Cara Membuat Akun Admin Pertama
+1. Buka dashboard Supabase Anda -> menu **Authentication** -> **Users**.
+2. Klik tombol **Add user** -> pilih **Create user**.
+3. Masukkan Email (contoh: `admin@dkcatering.com`) dan Password yang kuat. Pastikan *Auto Confirm User* dicentang.
+4. Salin `User UID` yang terbentuk.
+5. Buka menu **SQL Editor** dan jalankan perintah SQL berikut:
 ```sql
-SELECT * INTO v_daily_menu FROM daily_menus WHERE menu_date = v_today AND menu_id = v_item.menu_id FOR UPDATE;
+INSERT INTO admins (id, email, name)
+VALUES (
+  '<PASTE_USER_UID_DISINI>',
+  'admin@dkcatering.com',
+  'Admin Utama DK'
+)
+ON CONFLICT (id) DO NOTHING;
 ```
-**Cara Menguji:**
-1. Atur sisa kuota menu tertentu menjadi 1 porsi di tabel `daily_menus` (`quota = 10, sold = 9`).
-2. Buka dua jendela browser yang berbeda dengan akun pelanggan berbeda. Masukkan menu tersebut masing-masing 1 porsi ke keranjang.
-3. Tekan tombol **"Lanjut Pesan Sekarang"** pada kedua jendela secara hampir bersamaan.
-4. **Hasil:** Pesanan pertama akan berhasil dan mengupdate `sold` menjadi 10. Transaksi pesanan kedua yang mengantre akan membaca `sold = 10` dan otomatis di-abort (rollback), menampilkan pesan ramah: *"Maaf, sisa porsi untuk [Nama Menu] hanya tersisa 0 porsi."*
+6. Akun siap digunakan untuk login di `/admin/login`.
 
-### 5. Skenario Uji Privasi Alamat:
-1. Buka Developer Tools browser (F12) -> tab **Network**.
-2. Masuk ke halaman `/pesan` atau `/profil`.
-3. Periksa semua respons HTML dan JSON yang diterima client.
-4. **Hasil:** Data alamat lengkap (nomor rumah asli, patokan kurir, RT/RW) **tidak pernah dikirim** dalam payload; yang dikirimkan hanyalah string disamarkan seperti *"Jl. Melati No. ••, Lowokwaru"*.
+---
+
+## 🖨️ Panduan Cetak Struk Printer Thermal 58mm (Algoo + RawBT)
+
+### 1. Pasang Printer & Aplikasi di Android
+1. Nyalakan printer Bluetooth **Algoo 58mm**.
+2. Di HP Android pengelola/admin, aktifkan Bluetooth dan pasangkan (*pair*) dengan printer (biasanya nama perangkat `MTP-2`, `RPP02N`, atau `POS-58`, PIN default: `0000` atau `1234`).
+3. Buka **Google Play Store**, instal aplikasi **RawBT print service**.
+4. Buka aplikasi RawBT:
+   - Pilih jenis koneksi: **Bluetooth**.
+   - Pilih printer Algoo yang sudah di-pair.
+   - Pada pengaturan kertas, pastikan memilih **58 mm (32 characters)**.
+   - Lakukan uji cetak (*Test Print*) dari aplikasi RawBT hingga berhasil keluar.
+
+### 2. Cara Kerja Pencetakan di Dashboard Admin DK
+- Admin menekan tombol **"Cetak RawBT"** pada daftar pesanan atau halaman rekap masak.
+- Sistem secara otomatis meng-encode data pesanan ke dalam format ESC/POS 32 karakter dan memanggil skema URL `rawbt:base64,...`.
+- Aplikasi RawBT langsung mencetak struk secara otomatis tanpa perlu input manual di aplikasi kasir lain.
+- Setiap kali dicetak, sistem menambah hitungan `print_count` dan mencatat `last_printed_at`. Jika struk pernah dicetak sebelumnya, sistem meminta konfirmasi cetak ulang untuk menghindari duplikasi pesanan.
+
+---
+
+## 🧪 Cara Pengujian Tahap 3
+
+1. **Jalankan Aplikasi:**
+   ```bash
+   npm run dev
+   ```
+2. **Uji Keamanan Akses Admin:**
+   - Akses `/admin` tanpa login -> otomatis dialihkan ke `/admin/login`.
+   - Coba akses data admin via cURL tanpa autentikasi admin: ditolak oleh middleware dan Server Actions.
+3. **Uji Login Admin:**
+   - Masukkan email dan password admin yang telah dibuat di Supabase Auth.
+   - Berhasil masuk ke dashboard dengan ringkasan transaksi hari ini yang auto-refresh tiap 30 detik.
+4. **Uji Menu Hari Ini & Master Menu:**
+   - Buka `/admin/menu` -> Master Menu -> Tambah menu baru dan upload foto (otomatis terkompres di bawah 2MB dan tersimpan di bucket `menu-photos`).
+   - Di tab Menu Harian, pilih tanggal dan tambahkan menu tersebut dengan kuota porsi. Menu langsung muncul di beranda customer `/`.
+   - Coba tombol "Salin dari Hari Lain".
+5. **Uji Pembatalan Pesanan (`cancel_order`):**
+   - Pada `/admin/pesanan`, klik tombol **Batalkan** pada pesanan yang sedang aktif.
+   - Periksa tabel `daily_menus`: kuota `sold` otomatis berkurang kembali sejumlah porsi pesanan yang dibatalkan.
+6. **Uji Rekap Masak:**
+   - Buka `/admin/rekap-masak`. Periksa apakah total porsi tiap menu cocok dengan seluruh pesanan aktif hari itu (pesanan yang berstatus batal tidak dihitung).
+   - Catatan khusus pelanggan ("tanpa pedas", dsb) tampil besar dan jelas untuk tim masak malam/subuh.
+7. **Uji Cetak Thermal 58mm:**
+   - Buka `/admin/pengaturan` -> bagian printer -> klik **"Cetak Uji Coba (RawBT)"**.
+   - Periksa apakah lebar teks 32 karakter tercetak rapi tanpa terpotong.

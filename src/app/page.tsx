@@ -206,7 +206,15 @@ async function getDailyMenus(): Promise<{
       .eq("menu_date", today);
 
     if (error || !data || data.length === 0) {
-      return { menus: FALLBACK_MENUS, isFromDb: false };
+      // Fallback data simulasi hanya aktif jika NODE_ENV=development DAN NEXT_PUBLIC_USE_MOCK_DATA=true
+      const allowMock =
+        process.env.NODE_ENV === "development" &&
+        process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+
+      if (allowMock) {
+        return { menus: FALLBACK_MENUS, isFromDb: false };
+      }
+      return { menus: [], isFromDb: true };
     }
 
     const mappedMenus: MenuItemData[] = (
@@ -237,10 +245,22 @@ async function getDailyMenus(): Promise<{
 
     return { menus: mappedMenus, isFromDb: true };
   } catch {
+    const allowMock =
+      process.env.NODE_ENV === "development" &&
+      process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+
+    if (allowMock) {
+      return {
+        menus: FALLBACK_MENUS,
+        isFromDb: false,
+        error: "Mode simulasi aktif.",
+      };
+    }
+
     return {
-      menus: FALLBACK_MENUS,
-      isFromDb: false,
-      error: "Koneksi Supabase belum aktif, menampilkan data simulasi.",
+      menus: [],
+      isFromDb: true,
+      error: "Gagal memuat menu hari ini. Silakan coba kembali nanti.",
     };
   }
 }
@@ -268,10 +288,10 @@ export default async function HomePage() {
           </p>
 
           {!isFromDb && (
-            <div className="p-2.5 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-900 flex items-center gap-2 mt-2">
-              <AlertCircle className="w-4 h-4 shrink-0 text-accent-hover" />
+            <div className="p-2.5 bg-amber-500 text-charcoal font-black rounded-2xl border border-amber-600 text-xs flex items-center gap-2 mt-2 shadow-xs">
+              <AlertCircle className="w-4 h-4 shrink-0" />
               <span>
-                Menampilkan data menu lokal. Sambungkan Supabase di <code>.env.local</code> untuk data live.
+                MODE SIMULASI (Data lokal aktif untuk pengujian)
               </span>
             </div>
           )}
