@@ -22,8 +22,7 @@ export default function RootLayout({
   return (
     <html lang="id" className={inter.variable}>
       <body className="min-h-screen bg-[#F8F9FA] text-[#121212] antialiased">
-        {/* Konten dibatasi lebar maksimal 480px di tengah untuk mobile-first */}
-        <div className="mx-auto min-h-screen max-w-[480px] bg-white shadow-sm flex flex-col relative">
+        <div className="min-h-screen flex flex-col relative w-full">
           {children}
         </div>
       </body>

@@ -70,8 +70,8 @@ export function MenuCard({ item }: MenuCardProps) {
               src={item.photoUrl}
               alt={item.name}
               fill
-              className="object-cover"
-              sizes="(max-width: 480px) 50vw, 240px"
+              className="object-cover transition-transform group-hover:scale-105 duration-300"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               onError={() => setImageError(true)}
             />
           ) : (

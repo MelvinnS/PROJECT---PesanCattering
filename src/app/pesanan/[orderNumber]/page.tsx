@@ -25,8 +25,8 @@ export default async function OrderSuccessPage({
   }
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-5 space-y-6">
-      <div className="bg-white rounded-card p-6 sm:p-8 border border-charcoal-100 shadow-card text-center space-y-5 my-auto">
+    <div className="flex-1 flex flex-col justify-center items-center p-4 sm:p-6 md:p-8 w-full">
+      <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-charcoal-100 shadow-sm text-center space-y-5 my-auto">
         {/* Ikon Sukses */}
         <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center animate-in zoom-in-75">
           <CheckCircle2 className="w-12 h-12 stroke-[2.5]" />

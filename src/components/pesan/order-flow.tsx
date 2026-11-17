@@ -160,223 +160,231 @@ export function OrderFlow({ customer, addresses: initialAddresses }: OrderFlowPr
         </div>
       )}
 
-      {/* 1. RINGKASAN KERANJANG */}
-      <section className="bg-white rounded-card p-4 sm:p-5 border border-charcoal-100 shadow-card space-y-4">
-        <div className="flex items-center justify-between border-b border-charcoal-100 pb-3">
-          <h2 className="text-lg sm:text-xl font-black text-charcoal tracking-tight">
-            Pesanan Anda ({items.reduce((acc, i) => acc + i.quantity, 0)} Porsi)
-          </h2>
-          <Link href="/" className="text-xs font-bold text-accent-hover hover:underline">
-            + Tambah Menu
-          </Link>
-        </div>
-
-        <div className="divide-y divide-charcoal-100">
-          {items.map((item) => (
-            <div key={item.dailyMenuId} className="py-3 flex items-center justify-between gap-3">
-              <div className="flex-1 pr-2">
-                <h4 className="font-bold text-charcoal text-sm sm:text-base leading-snug">
-                  {item.name}
-                </h4>
-                <p className="text-xs text-charcoal-500 mt-0.5">
-                  {formatRupiah(item.price)} x {item.quantity}
-                </p>
-                <p className="text-sm font-black text-charcoal mt-1">
-                  {formatRupiah(item.price * item.quantity)}
-                </p>
-              </div>
-
-              {/* Kontrol Jumlah */}
-              <div className="flex items-center gap-1.5 bg-surface-subtle p-1 rounded-full border border-charcoal-200 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (item.quantity === 1) {
-                      removeItem(item.dailyMenuId);
-                    } else {
-                      updateQuantity(item.dailyMenuId, item.quantity - 1);
-                    }
-                  }}
-                  className="w-8 h-8 rounded-full bg-white text-charcoal flex items-center justify-center active:scale-95 transition-transform"
-                  aria-label="Kurangi"
-                >
-                  {item.quantity === 1 ? (
-                    <Trash2 className="w-3.5 h-3.5 text-red-600" />
-                  ) : (
-                    <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
-                  )}
-                </button>
-                <span className="w-6 text-center font-black text-sm select-none">
-                  {item.quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(item.dailyMenuId, item.quantity + 1)}
-                  disabled={item.quantity >= item.remainingQuota}
-                  className="w-8 h-8 rounded-full bg-accent text-charcoal flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40"
-                  aria-label="Tambah"
-                >
-                  <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
-                </button>
-              </div>
+      {/* Grid 2 Kolom di Desktop (Kiri: Keranjang, Kanan: Alamat, Pembayaran & Rincian) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Kolom Kiri: Rincian Keranjang */}
+        <div className="lg:col-span-7 space-y-4">
+          {/* 1. RINGKASAN KERANJANG */}
+          <section className="bg-white rounded-3xl p-4 sm:p-6 border border-charcoal-100 shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-charcoal-100 pb-3">
+              <h2 className="text-lg sm:text-xl font-black text-charcoal tracking-tight">
+                Pesanan Anda ({items.reduce((acc, i) => acc + i.quantity, 0)} Porsi)
+              </h2>
+              <Link href="/" className="text-xs sm:text-sm font-bold text-accent-hover hover:underline">
+                + Tambah Menu
+              </Link>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* 2. DATA PELANGGAN & ALAMAT PENGANTARAN (DISAMARKAN) */}
-      <section className="bg-white rounded-card p-4 sm:p-5 border border-charcoal-100 shadow-card space-y-3">
-        <div className="flex items-center justify-between border-b border-charcoal-100 pb-3">
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-accent-hover" />
+            <div className="divide-y divide-charcoal-100">
+              {items.map((item) => (
+                <div key={item.dailyMenuId} className="py-3.5 flex items-center justify-between gap-3">
+                  <div className="flex-1 pr-2">
+                    <h4 className="font-bold text-charcoal text-sm sm:text-base leading-snug">
+                      {item.name}
+                    </h4>
+                    <p className="text-xs text-charcoal-500 mt-0.5">
+                      {formatRupiah(item.price)} x {item.quantity}
+                    </p>
+                    <p className="text-sm sm:text-base font-black text-charcoal mt-1">
+                      {formatRupiah(item.price * item.quantity)}
+                    </p>
+                  </div>
+
+                  {/* Kontrol Jumlah */}
+                  <div className="flex items-center gap-1.5 bg-surface-subtle p-1 rounded-full border border-charcoal-200 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (item.quantity === 1) {
+                          removeItem(item.dailyMenuId);
+                        } else {
+                          updateQuantity(item.dailyMenuId, item.quantity - 1);
+                        }
+                      }}
+                      className="w-8 h-8 rounded-full bg-white text-charcoal flex items-center justify-center active:scale-95 transition-transform"
+                      aria-label="Kurangi"
+                    >
+                      {item.quantity === 1 ? (
+                        <Trash2 className="w-3.5 h-3.5 text-red-600" />
+                      ) : (
+                        <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
+                      )}
+                    </button>
+                    <span className="w-6 text-center font-black text-sm select-none">
+                      {item.quantity}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.dailyMenuId, item.quantity + 1)}
+                      disabled={item.quantity >= item.remainingQuota}
+                      className="w-8 h-8 rounded-full bg-accent text-charcoal flex items-center justify-center active:scale-95 transition-transform disabled:opacity-40"
+                      aria-label="Tambah"
+                    >
+                      <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* 3. CATATAN PEMESANAN */}
+          <section className="bg-white rounded-3xl p-4 sm:p-6 border border-charcoal-100 shadow-sm space-y-2">
+            <label className="text-sm font-bold text-charcoal block">
+              Catatan untuk Dapur (Opsional)
+            </label>
+            <input
+              type="text"
+              value={orderNote}
+              onChange={(e) => setOrderNote(e.target.value)}
+              placeholder="Contoh: Tanpa pedas, nasi lembek, pisah sambal"
+              className="w-full min-h-[48px] px-4 rounded-xl bg-surface-subtle border border-charcoal-200 focus:border-charcoal focus:bg-white text-sm font-semibold text-charcoal outline-none transition-all"
+            />
+          </section>
+        </div>
+
+        {/* Kolom Kanan: Alamat, Pembayaran & Rincian Biaya */}
+        <div className="lg:col-span-5 space-y-4">
+          {/* 2. DATA PELANGGAN & ALAMAT PENGANTARAN (DISAMARKAN) */}
+          <section className="bg-white rounded-3xl p-4 sm:p-6 border border-charcoal-100 shadow-sm space-y-3">
+            <div className="flex items-center justify-between border-b border-charcoal-100 pb-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-accent-hover" />
+                <h2 className="text-base sm:text-lg font-black text-charcoal">
+                  Alamat Pengantaran
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddressModal(true)}
+                className="text-xs font-bold text-accent-hover hover:underline"
+              >
+                Ganti Alamat
+              </button>
+            </div>
+
+            <div>
+              <p className="text-xs text-charcoal-400 font-semibold uppercase tracking-wider">
+                Penerima
+              </p>
+              <p className="text-base font-bold text-charcoal">{customer.name}</p>
+              <p className="text-xs text-charcoal-500 font-medium">
+                +{customer.waNumber} (ID: {customer.customerCode})
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-charcoal-100">
+              <p className="text-xs text-charcoal-400 font-semibold uppercase tracking-wider">
+                Alamat ({currentAddress?.label || "Utama"})
+              </p>
+              {currentAddress ? (
+                <p className="text-sm font-semibold text-charcoal mt-0.5 leading-relaxed">
+                  {currentAddress.maskedAddress}
+                </p>
+              ) : (
+                <p className="text-sm text-red-600 font-semibold mt-0.5">
+                  Belum ada alamat dipilih.
+                </p>
+              )}
+              <span className="text-[11px] text-charcoal-400 block mt-1">
+                * Alamat lengkap disamarkan demi keamanan data Anda.
+              </span>
+            </div>
+          </section>
+
+          {/* 4. METODE PEMBAYARAN */}
+          <section className="bg-white rounded-3xl p-4 sm:p-6 border border-charcoal-100 shadow-sm space-y-3">
             <h2 className="text-base sm:text-lg font-black text-charcoal">
-              Alamat Pengantaran
+              Metode Pembayaran
             </h2>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowAddressModal(true)}
-            className="text-xs font-bold text-accent-hover hover:underline"
-          >
-            Ganti Alamat
-          </button>
-        </div>
 
-        <div>
-          <p className="text-xs text-charcoal-400 font-semibold uppercase tracking-wider">
-            Penerima
-          </p>
-          <p className="text-base font-bold text-charcoal">{customer.name}</p>
-          <p className="text-xs text-charcoal-500 font-medium">
-            +{customer.waNumber} (ID: {customer.customerCode})
-          </p>
-        </div>
-
-        <div className="pt-2 border-t border-charcoal-100">
-          <p className="text-xs text-charcoal-400 font-semibold uppercase tracking-wider">
-            Alamat ({currentAddress?.label || "Utama"})
-          </p>
-          {currentAddress ? (
-            <p className="text-sm font-semibold text-charcoal mt-0.5">
-              {currentAddress.maskedAddress}
-            </p>
-          ) : (
-            <p className="text-sm text-red-600 font-semibold mt-0.5">
-              Belum ada alamat dipilih.
-            </p>
-          )}
-          <span className="text-[11px] text-charcoal-400 block mt-1">
-            * Alamat lengkap disamarkan demi keamanan data Anda.
-          </span>
-        </div>
-      </section>
-
-      {/* 3. CATATAN PEMESANAN */}
-      <section className="bg-white rounded-card p-4 sm:p-5 border border-charcoal-100 shadow-card space-y-2">
-        <label className="text-sm font-bold text-charcoal block">
-          Catatan untuk Dapur (Opsional)
-        </label>
-        <input
-          type="text"
-          value={orderNote}
-          onChange={(e) => setOrderNote(e.target.value)}
-          placeholder="Contoh: Tanpa pedas, nasi lembek, pisah sambal"
-          className="w-full min-h-[48px] px-4 rounded-xl bg-surface-subtle border border-charcoal-200 focus:border-charcoal focus:bg-white text-sm font-semibold text-charcoal outline-none transition-all"
-        />
-      </section>
-
-      {/* 4. METODE PEMBAYARAN */}
-      <section className="bg-white rounded-card p-4 sm:p-5 border border-charcoal-100 shadow-card space-y-3">
-        <h2 className="text-base sm:text-lg font-black text-charcoal">
-          Metode Pembayaran
-        </h2>
-
-        <div className="space-y-2.5">
-          {/* Opsi 1: Tunai ke Kurir (Aktif) */}
-          <div className="p-3.5 rounded-2xl border-2 border-charcoal bg-amber-50/30 flex items-center justify-between cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-accent text-charcoal flex items-center justify-center">
-                <Banknote className="w-5 h-5 stroke-[2.2]" />
+            <div className="space-y-2.5">
+              {/* Opsi 1: Tunai ke Kurir (Aktif) */}
+              <div className="p-3.5 rounded-2xl border-2 border-charcoal bg-amber-50/30 flex items-center justify-between cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-accent text-charcoal flex items-center justify-center">
+                    <Banknote className="w-5 h-5 stroke-[2.2]" />
+                  </div>
+                  <div>
+                    <p className="font-black text-charcoal text-sm sm:text-base">
+                      Tunai ke Kurir (Cash)
+                    </p>
+                    <p className="text-xs text-charcoal-500">
+                      Bayar langsung saat makanan tiba di rumah
+                    </p>
+                  </div>
+                </div>
+                <div className="w-6 h-6 rounded-full bg-charcoal text-white flex items-center justify-center">
+                  <Check className="w-4 h-4 stroke-[3]" />
+                </div>
               </div>
-              <div>
-                <p className="font-black text-charcoal text-sm sm:text-base">
-                  Tunai ke Kurir (Cash)
-                </p>
-                <p className="text-xs text-charcoal-500">
-                  Bayar langsung saat makanan tiba di rumah
-                </p>
+
+              {/* Opsi 2: BCA VA (Segera Hadir) */}
+              <div className="p-3 rounded-2xl border border-charcoal-200 bg-gray-50 opacity-55 flex items-center justify-between cursor-not-allowed">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-charcoal-100 text-charcoal-400 flex items-center justify-center">
+                    <Landmark className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-charcoal-700 text-xs sm:text-sm">Transfer BCA VA</p>
+                    <p className="text-[11px] text-charcoal-400">Virtual account otomatis</p>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-charcoal-200 text-charcoal-600 px-2 py-0.5 rounded-full font-bold">
+                  Segera hadir
+                </span>
+              </div>
+
+              {/* Opsi 3: QRIS (Segera Hadir) */}
+              <div className="p-3 rounded-2xl border border-charcoal-200 bg-gray-50 opacity-55 flex items-center justify-between cursor-not-allowed">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-full bg-charcoal-100 text-charcoal-400 flex items-center justify-center">
+                    <QrCode className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-charcoal-700 text-xs sm:text-sm">QRIS</p>
+                    <p className="text-[11px] text-charcoal-400">GoPay, OVO, BCA, Livin</p>
+                  </div>
+                </div>
+                <span className="text-[10px] bg-charcoal-200 text-charcoal-600 px-2 py-0.5 rounded-full font-bold">
+                  Segera hadir
+                </span>
               </div>
             </div>
-            <div className="w-6 h-6 rounded-full bg-charcoal text-white flex items-center justify-center">
-              <Check className="w-4 h-4 stroke-[3]" />
+          </section>
+
+          {/* 5. RINGKASAN BIAYA & TOMBOL PESAN */}
+          <section className="bg-white rounded-3xl p-4 sm:p-6 border border-charcoal-100 shadow-sm space-y-3">
+            <h2 className="text-base sm:text-lg font-black text-charcoal pb-2 border-b border-charcoal-100">
+              Rincian Pembayaran
+            </h2>
+            <div className="flex justify-between text-sm text-charcoal-600">
+              <span>Subtotal Menu</span>
+              <span className="font-bold text-charcoal">{formatRupiah(subtotal)}</span>
             </div>
-          </div>
-
-          {/* Opsi 2: BCA VA (Segera Hadir) */}
-          <div className="p-3.5 rounded-2xl border border-charcoal-200 bg-gray-50 opacity-55 flex items-center justify-between cursor-not-allowed">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-charcoal-100 text-charcoal-400 flex items-center justify-center">
-                <Landmark className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-bold text-charcoal-700 text-sm">Transfer BCA VA</p>
-                <p className="text-[11px] text-charcoal-400">Pembayaran otomatis virtual account</p>
-              </div>
+            <div className="flex justify-between text-sm text-charcoal-600">
+              <span>Biaya Ongkir</span>
+              <span className="font-semibold text-accent-hover">Dihitung nanti (Gratis promo)</span>
             </div>
-            <span className="text-[10px] bg-charcoal-200 text-charcoal-600 px-2 py-0.5 rounded-full font-bold">
-              Segera hadir
-            </span>
-          </div>
-
-          {/* Opsi 3: QRIS (Segera Hadir) */}
-          <div className="p-3.5 rounded-2xl border border-charcoal-200 bg-gray-50 opacity-55 flex items-center justify-between cursor-not-allowed">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-charcoal-100 text-charcoal-400 flex items-center justify-center">
-                <QrCode className="w-5 h-5" />
-              </div>
-              <div>
-                <p className="font-bold text-charcoal-700 text-sm">QRIS</p>
-                <p className="text-[11px] text-charcoal-400">Scan dari GoPay, OVO, BCA, Livin</p>
-              </div>
+            <div className="flex justify-between text-base sm:text-lg font-black text-charcoal pt-2 border-t border-charcoal-100">
+              <span>Total Pembayaran</span>
+              <span className="text-xl sm:text-2xl text-charcoal">{formatRupiah(total)}</span>
             </div>
-            <span className="text-[10px] bg-charcoal-200 text-charcoal-600 px-2 py-0.5 rounded-full font-bold">
-              Segera hadir
-            </span>
-          </div>
-        </div>
-      </section>
 
-      {/* 5. RINGKASAN BIAYA */}
-      <section className="bg-white rounded-card p-4 sm:p-5 border border-charcoal-100 shadow-card space-y-2.5">
-        <h2 className="text-base sm:text-lg font-black text-charcoal pb-2 border-b border-charcoal-100">
-          Rincian Pembayaran
-        </h2>
-        <div className="flex justify-between text-sm text-charcoal-600">
-          <span>Subtotal Menu</span>
-          <span className="font-bold text-charcoal">{formatRupiah(subtotal)}</span>
+            <div className="pt-2">
+              <Button
+                type="button"
+                onClick={handleSubmitOrder}
+                disabled={isSubmitting || items.length === 0}
+                className="w-full shadow-lg"
+                variant="primary"
+              >
+                <span>{isSubmitting ? "Memproses Pesanan..." : "Lanjut Pesan Sekarang"}</span>
+                {!isSubmitting && <ArrowRight className="w-5 h-5 ml-2" />}
+              </Button>
+            </div>
+          </section>
         </div>
-        <div className="flex justify-between text-sm text-charcoal-600">
-          <span>Biaya Ongkir</span>
-          <span className="font-semibold text-accent-hover">Dihitung nanti (Gratis promo)</span>
-        </div>
-        <div className="flex justify-between text-base sm:text-lg font-black text-charcoal pt-2 border-t border-charcoal-100">
-          <span>Total Pembayaran</span>
-          <span className="text-xl sm:text-2xl text-charcoal">{formatRupiah(total)}</span>
-        </div>
-      </section>
-
-      {/* 6. TOMBOL PIL HITAM LANJUT PESAN */}
-      <div className="pt-2">
-        <Button
-          type="button"
-          onClick={handleSubmitOrder}
-          disabled={isSubmitting || items.length === 0}
-          className="w-full shadow-lg"
-          variant="primary"
-        >
-          <span>{isSubmitting ? "Memproses Pesanan..." : "Lanjut Pesan Sekarang"}</span>
-          {!isSubmitting && <ArrowRight className="w-5 h-5 ml-2" />}
-        </Button>
       </div>
 
       {/* MODAL GANTI / TAMBAH ALAMAT */}

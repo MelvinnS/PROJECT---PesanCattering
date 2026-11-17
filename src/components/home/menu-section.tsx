@@ -31,7 +31,7 @@ export function MenuSection({ initialMenus }: MenuSectionProps) {
         placeholder="Cari masakan hari ini..."
       />
 
-      {/* Grid 2 Menu dalam 1 Baris di Semua Layar Mobile */}
+      {/* Grid 2 Menu dalam 1 Baris di HP, responsif 3-4 kolom di Desktop */}
       {filteredMenus.length === 0 ? (
         <div className="py-12 px-4 text-center rounded-2xl bg-surface-muted border border-charcoal-100">
           <div className="w-12 h-12 rounded-full bg-charcoal-100 text-charcoal-400 mx-auto flex items-center justify-center mb-3">
@@ -45,7 +45,7 @@ export function MenuSection({ initialMenus }: MenuSectionProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-5">
           {filteredMenus.map((menu) => (
             <MenuCard key={menu.dailyMenuId} item={menu} />
           ))}

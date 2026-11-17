@@ -272,24 +272,24 @@ export default async function HomePage() {
   ]);
 
   return (
-    <div className="flex-1 flex flex-col pb-36">
+    <div className="flex-1 flex flex-col pb-36 bg-[#F8F9FA]">
       {/* 1. Header dengan status login aktual */}
       <Header isLoggedIn={!!currentCustomer} />
 
       {/* Main Content Area */}
-      <main className="px-3.5 sm:px-4 py-4 space-y-4">
-        {/* Judul Menu Hari Ini (Tanggal telah dihapus sesuai instruksi) */}
-        <section className="space-y-1">
-          <h1 className="text-2xl sm:text-3xl font-black text-charcoal tracking-tight leading-tight">
+      <main className="w-full max-w-6xl mx-auto px-3.5 sm:px-6 md:px-8 py-5 sm:py-8 space-y-6">
+        {/* Judul Menu Hari Ini */}
+        <section className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-charcoal tracking-tight leading-tight">
             Menu Hari Ini
           </h1>
-          <p className="text-charcoal-500 text-xs sm:text-sm">
+          <p className="text-charcoal-500 text-xs sm:text-base">
             Masakan rumahan segar dan higienis siap diantar ke rumah Anda.
           </p>
 
           {!isFromDb && (
-            <div className="p-2.5 bg-amber-500 text-charcoal font-black rounded-2xl border border-amber-600 text-xs flex items-center gap-2 mt-2 shadow-xs">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3 bg-amber-500 text-charcoal font-black rounded-2xl border border-amber-600 text-xs sm:text-sm flex items-center gap-2 mt-2 shadow-xs max-w-xl">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
               <span>
                 MODE SIMULASI (Data lokal aktif untuk pengujian)
               </span>
@@ -297,13 +297,13 @@ export default async function HomePage() {
           )}
         </section>
 
-        {/* 2. Daftar Menu & Fitur Pencarian (Grid 2 Kolom di Mobile) */}
+        {/* 2. Daftar Menu & Fitur Pencarian */}
         {menus.length === 0 ? (
-          <div className="py-12 px-4 text-center rounded-2xl bg-surface-muted border border-charcoal-100">
-            <p className="text-lg font-bold text-charcoal mb-1">
+          <div className="py-16 px-4 text-center rounded-3xl bg-white border border-charcoal-100 shadow-sm max-w-xl mx-auto">
+            <p className="text-lg sm:text-xl font-bold text-charcoal mb-1">
               Menu hari ini belum tersedia
             </p>
-            <p className="text-charcoal-500 text-xs">
+            <p className="text-charcoal-500 text-xs sm:text-sm">
               Silakan cek kembali beberapa saat lagi atau hubungi kami lewat WhatsApp.
             </p>
           </div>
@@ -312,15 +312,17 @@ export default async function HomePage() {
         )}
 
         {/* 3. Tombol Bantuan via WhatsApp */}
-        <section className="pt-2 pb-2">
-          <div className="bg-emerald-50 rounded-2xl p-3.5 border border-emerald-100 text-center space-y-2.5">
-            <h4 className="font-bold text-charcoal text-base">
+        <section className="pt-4 pb-2">
+          <div className="bg-emerald-50/80 rounded-3xl p-5 sm:p-6 border border-emerald-100 text-center space-y-2.5 max-w-2xl mx-auto shadow-sm">
+            <h4 className="font-bold text-charcoal text-base sm:text-lg">
               Butuh bantuan atau pertanyaan?
             </h4>
-            <p className="text-charcoal-600 text-xs">
+            <p className="text-charcoal-600 text-xs sm:text-sm">
               Admin kami siap melayani pesanan Anda setiap hari.
             </p>
-            <WhatsAppButton />
+            <div className="pt-1 flex justify-center">
+              <WhatsAppButton />
+            </div>
           </div>
         </section>
       </main>

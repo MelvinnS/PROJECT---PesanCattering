@@ -23,7 +23,7 @@ export default async function ProfilPage() {
   ]);
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-5 space-y-4">
+    <div className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 w-full max-w-4xl mx-auto space-y-4">
       <BackButton label="Kembali ke Beranda" fallbackUrl="/" />
 
       <div className="space-y-1">
