@@ -1,101 +1,312 @@
-import Image from "next/image";
+import { Header } from "@/components/home/header";
+import { MenuItemData } from "@/components/home/menu-card";
+import { MenuSection } from "@/components/home/menu-section";
+import { FloatingCart } from "@/components/home/floating-cart";
+import { WhatsAppButton } from "@/components/home/whatsapp-button";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentCustomer } from "@/lib/session";
+import { AlertCircle } from "lucide-react";
 
-export default function Home() {
+export const revalidate = 0; // Dynamic fetch agar data selalu update
+
+// Fallback data simulasi jika Supabase belum terhubung
+const FALLBACK_MENUS: MenuItemData[] = [
+  {
+    dailyMenuId: "dm-01",
+    menuId: "m-01",
+    name: "Ayam Goreng Lengkuas",
+    description: "Ayam goreng bumbu rempah lengkuas gurih dan renyah, disajikan dengan sambal terasi matang.",
+    price: 28000,
+    photoUrl: "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=600&q=80",
+    quota: 30,
+    sold: 8,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-02",
+    menuId: "m-02",
+    name: "Rendang Sapi Empuk",
+    description: "Daging sapi pilihan dimasak perlahan dengan santan dan rempah khas Padang, tekstur empuk ramah lansia.",
+    price: 35000,
+    photoUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
+    quota: 25,
+    sold: 12,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-03",
+    menuId: "m-03",
+    name: "Sayur Asem Jakarta",
+    description: "Kuah asam segar kaya rasa dengan kacang tanah, jagung manis, labu siam, dan melinjo.",
+    price: 12000,
+    photoUrl: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80",
+    quota: 20,
+    sold: 5,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-04",
+    menuId: "m-04",
+    name: "Ikan Gurame Bakar Madu",
+    description: "Gurame segar bakar dengan olesan kecap madu gurih manis tidak pedas.",
+    price: 32000,
+    photoUrl: "https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=600&q=80",
+    quota: 15,
+    sold: 15, // Habis
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-05",
+    menuId: "m-05",
+    name: "Sop Buntut Gurih",
+    description: "Buntut sapi empuk dengan kaldu bening gurih, wortel, dan kentang lembut.",
+    price: 35000,
+    photoUrl: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80",
+    quota: 20,
+    sold: 9,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-06",
+    menuId: "m-06",
+    name: "Tumis Buncis Jagung Manis",
+    description: "Sayur buncis muda dan jagung manis ditumis bawang putih wangi.",
+    price: 10000,
+    photoUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80",
+    quota: 25,
+    sold: 4,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-07",
+    menuId: "m-07",
+    name: "Empal Gepuk Suwir",
+    description: "Daging sapi manis gurih yang dipukul lembut dan disuwir mudah dikunyah.",
+    price: 30000,
+    photoUrl: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
+    quota: 20,
+    sold: 2,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-08",
+    menuId: "m-08",
+    name: "Pepes Tahu Jamur Kemangi",
+    description: "Tahu sutra kukus daun pisang dengan jamur tiram dan aroma kemangi segar.",
+    price: 12000,
+    photoUrl: "https://images.unsplash.com/photo-1505253758473-96b3d5ebcd44?auto=format&fit=crop&w=600&q=80",
+    quota: 30,
+    sold: 6,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-09",
+    menuId: "m-09",
+    name: "Capcay Kuah Kental",
+    description: "Aneka sayuran segar (kembang kol, wortel, brokoli, sawi) dengan kuah kaldu ayam gurih.",
+    price: 16000,
+    photoUrl: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80",
+    quota: 20,
+    sold: 7,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-10",
+    menuId: "m-10",
+    name: "Telur Balado Padang",
+    description: "Dua butir telur rebus goreng dengan sambal balado tomat gurih manis pedas ringan.",
+    price: 14000,
+    photoUrl: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=600&q=80",
+    quota: 25,
+    sold: 10,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-11",
+    menuId: "m-11",
+    name: "Sayur Lodeh Labu Siam",
+    description: "Sayur labu siam dan tahu tempe kuah santan gurih bumbu desa.",
+    price: 12000,
+    photoUrl: "https://images.unsplash.com/photo-1547592180-85f173990554?auto=format&fit=crop&w=600&q=80",
+    quota: 20,
+    sold: 3,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-12",
+    menuId: "m-12",
+    name: "Rawon Daging Sapi",
+    description: "Kuah rawon kluwek hitam khas Jawa Timur dengan daging sapi empuk dan sambal terasi.",
+    price: 32000,
+    photoUrl: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80",
+    quota: 25,
+    sold: 11,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-13",
+    menuId: "m-13",
+    name: "Perkedel Kentang Daging (3 pcs)",
+    description: "Kentang tumbuk lembut dicampur daging cincang dan daun bawang.",
+    price: 15000,
+    photoUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
+    quota: 30,
+    sold: 14,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-14",
+    menuId: "m-14",
+    name: "Opor Ayam Kampung",
+    description: "Potongan ayam kampung empuk kuah santan kuning wangi serai dan daun jeruk.",
+    price: 30000,
+    photoUrl: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&w=600&q=80",
+    quota: 20,
+    sold: 6,
+    isAvailable: true,
+  },
+  {
+    dailyMenuId: "dm-15",
+    menuId: "m-15",
+    name: "Sambal Goreng Kentang Ati",
+    description: "Potongan dadu kentang dan ati sapi dimasak bumbu merah gurih manis.",
+    price: 22000,
+    photoUrl: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80",
+    quota: 20,
+    sold: 20,
+    isAvailable: false, // Tidak tersedia
+  },
+];
+
+async function getDailyMenus(): Promise<{
+  menus: MenuItemData[];
+  isFromDb: boolean;
+  error?: string;
+}> {
+  try {
+    const supabase = createClient();
+    const today = new Date().toISOString().split("T")[0];
+
+    // Ambil daily_menus hari ini beserta relasi master menus
+    const { data, error } = await supabase
+      .from("daily_menus")
+      .select(`
+        id,
+        menu_id,
+        quota,
+        sold,
+        is_available,
+        menus:menu_id (
+          name,
+          description,
+          price,
+          photo_url
+        )
+      `)
+      .eq("menu_date", today);
+
+    if (error || !data || data.length === 0) {
+      return { menus: FALLBACK_MENUS, isFromDb: false };
+    }
+
+    const mappedMenus: MenuItemData[] = (
+      data as unknown as Array<{
+        id: string;
+        menu_id: string;
+        quota: number;
+        sold: number;
+        is_available: boolean;
+        menus: {
+          name: string;
+          description: string | null;
+          price: number;
+          photo_url: string | null;
+        } | null;
+      }>
+    ).map((item) => ({
+      dailyMenuId: item.id,
+      menuId: item.menu_id,
+      name: item.menus?.name || "Menu Catering",
+      description: item.menus?.description || null,
+      price: item.menus?.price || 0,
+      photoUrl: item.menus?.photo_url || null,
+      quota: item.quota,
+      sold: item.sold,
+      isAvailable: item.is_available,
+    }));
+
+    return { menus: mappedMenus, isFromDb: true };
+  } catch {
+    return {
+      menus: FALLBACK_MENUS,
+      isFromDb: false,
+      error: "Koneksi Supabase belum aktif, menampilkan data simulasi.",
+    };
+  }
+}
+
+export default async function HomePage() {
+  const [{ menus, isFromDb }, currentCustomer] = await Promise.all([
+    getDailyMenus(),
+    getCurrentCustomer(),
+  ]);
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    <div className="flex-1 flex flex-col pb-36">
+      {/* 1. Header dengan status login aktual */}
+      <Header isLoggedIn={!!currentCustomer} />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+      {/* Main Content Area */}
+      <main className="px-3.5 sm:px-4 py-4 space-y-4">
+        {/* Judul Menu Hari Ini (Tanggal telah dihapus sesuai instruksi) */}
+        <section className="space-y-1">
+          <h1 className="text-2xl sm:text-3xl font-black text-charcoal tracking-tight leading-tight">
+            Menu Hari Ini
+          </h1>
+          <p className="text-charcoal-500 text-xs sm:text-sm">
+            Masakan rumahan segar dan higienis siap diantar ke rumah Anda.
+          </p>
+
+          {!isFromDb && (
+            <div className="p-2.5 bg-amber-50 rounded-2xl border border-amber-200 text-[11px] text-amber-900 flex items-center gap-2 mt-2">
+              <AlertCircle className="w-4 h-4 shrink-0 text-accent-hover" />
+              <span>
+                Menampilkan data menu lokal. Sambungkan Supabase di <code>.env.local</code> untuk data live.
+              </span>
+            </div>
+          )}
+        </section>
+
+        {/* 2. Daftar Menu & Fitur Pencarian (Grid 2 Kolom di Mobile) */}
+        {menus.length === 0 ? (
+          <div className="py-12 px-4 text-center rounded-2xl bg-surface-muted border border-charcoal-100">
+            <p className="text-lg font-bold text-charcoal mb-1">
+              Menu hari ini belum tersedia
+            </p>
+            <p className="text-charcoal-500 text-xs">
+              Silakan cek kembali beberapa saat lagi atau hubungi kami lewat WhatsApp.
+            </p>
+          </div>
+        ) : (
+          <MenuSection initialMenus={menus} />
+        )}
+
+        {/* 3. Tombol Bantuan via WhatsApp */}
+        <section className="pt-2 pb-2">
+          <div className="bg-emerald-50 rounded-2xl p-3.5 border border-emerald-100 text-center space-y-2.5">
+            <h4 className="font-bold text-charcoal text-base">
+              Butuh bantuan atau pertanyaan?
+            </h4>
+            <p className="text-charcoal-600 text-xs">
+              Admin kami siap melayani pesanan Anda setiap hari.
+            </p>
+            <WhatsAppButton />
+          </div>
+        </section>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+      {/* 4. Keranjang Mengambang (Sticky Bottom) */}
+      <FloatingCart />
     </div>
   );
 }
